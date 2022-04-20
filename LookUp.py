@@ -1,9 +1,10 @@
 import csv
+import scapy.error
 from scapy.all import *
 from scapy.layers.inet import IP, TCP
 from scapy.layers.l2 import ARP, Ether
 import subprocess
-from termcolor.termcolor import colored
+from termcolor import colored
 from os import name
 
 if name == "posix":
@@ -21,11 +22,13 @@ def os_check():
 os_check()
 
 
-print(colored(""" _                _    _   _ ____  
-| |    ___   ___ | | _| | | |  _ \ 
-| |   / _ \ / _ \| |/ / | | | |_) |
-| |__| (_) | (_) |   <| |_| |  __/ 
-|_____\___/ \___/|_|\_\\___/|_|    """, 'green', attrs=['bold']))
+print(colored(""" _                _    _   _       
+| |    ___   ___ | | _| | | |_ __  
+| |   / _ \ / _ \| |/ / | | | '_ \ 
+| |__| (_) | (_) |   <| |_| | |_) |
+|_____\___/ \___/|_|\_\\___/| .__/ 
+                            |_|    
+""", 'green', attrs=['bold']))
 print(colored("""0. Exit\n1. Host Discovery\n2. Port Scanner.\n3. Packet Sniffer""", 'red', attrs=['bold']))
 
 print(colored("Enter the number: ", 'blue', attrs=["bold"]), end="")
@@ -95,14 +98,12 @@ def summary():
     counts = {}
     packets = rdpcap(file)
     for pac in packets:
-        if pac.sprintf("%IP.src% -> %IP.dst%") in counts:
+        if pac.sprintf("%IP.src% and %IP.dst%") in counts:
             counts[pac.sprintf("%IP.src% and %IP.dst%")] += 1
         else:
             counts[pac.sprintf("%IP.src% and %IP.dst%")] = 1
-
     for counted in counts:
         print(f"{counted} exchange packet {counts[counted]} times.")
-
 
 try:
     if number == "1":
@@ -166,8 +167,11 @@ try:
             colored("Choose one of the active interface name (leave blank if you don't know):", 'blue', attrs=["bold"]),
             end="")
         interface = input()
+        print(colored(f"-----------------------Sniffing started----------------------", 'green', attrs=["bold"]))
         sniffer(filtered)
-        print(colored(f"\t\tSniffed\n{file} is saved into your current directory.\n", 'yellow', attrs=["bold"]), end="")
+
+        print(colored(f"\n-----------------------Sniffed-------------------------", 'red', attrs=["bold"]))
+        print(colored(f"{file} is saved into your current directory.\n", 'yellow', attrs=["bold"]))
         print()
         print(colored("\nDo you want to show summary of the sniffed packet?\nEnter yes or no: ", 'cyan', attrs=["bold"]),end="")
         yes_or_no = input()
@@ -197,3 +201,6 @@ except ValueError:
 
 except FileNotFoundError:
     print(colored("\nOps! You forgot to give file name.\nExiting", 'red', attrs=["bold"]))
+
+except scapy.error.Scapy_Exception:
+    print(colored("\nOps! You entered wrong filtered method. Try some from given examples.\nExiting", 'red', attrs=["bold"]))
